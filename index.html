@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo das Vogais</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .game-section {
+            text-align: center;
+        }
+
+        .score {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+
+        .score-item {
+            background: #f0f0f0;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .score-item span {
+            color: #667eea;
+            font-size: 1.5em;
+        }
+
+        .letter-display {
+            font-size: 4em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 30px 0;
+            letter-spacing: 10px;
+        }
+
+        .question {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .btn-yes {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-yes:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        .btn-no {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-no:hover {
+            background: #da190b;
+            transform: scale(1.05);
+        }
+
+        .btn-restart {
+            background: #667eea;
+            color: white;
+            width: 100%;
+        }
+
+        .btn-restart:hover {
+            background: #5568d3;
+            transform: scale(1.02);
+        }
+
+        .feedback {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            min-height: 30px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            color: #4CAF50;
+        }
+
+        .feedback.incorrect {
+            color: #f44336;
+        }
+
+        .vowels {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .vowels h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .vowels p {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .game-over {
+            text-align: center;
+            display: none;
+        }
+
+        .game-over.show {
+            display: block;
+        }
+
+        .final-score {
+            font-size: 2.5em;
+            color: #667eea;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Jogo das Vogais</h1>
+        <p class="subtitle">Identifique se a letra é uma vogal!</p>
+
+        <div class="game-section">
+            <div class="score">
+                <div class="score-item">
+                    Acertos: <span id="correct">0</span>
+                </div>
+                <div class="score-item">
+                    Erros: <span id="incorrect">0</span>
+                </div>
+            </div>
+
+            <div id="gameContainer">
+                <div class="letter-display" id="letterDisplay">A</div>
+                <div class="question">Esta é uma vogal?</div>
+                <div class="feedback" id="feedback"></div>
+                <div class="buttons">
+                    <button class="btn-yes" onclick="answerYes()">Sim</button>
+                    <button class="btn-no" onclick="answerNo()">Não</button>
+                </div>
+            </div>
+
+            <div id="gameOver" class="game-over">
+                <h2>Fim de Jogo!</h2>
+                <div class="final-score" id="finalScore"></div>
+                <button class="btn-restart" onclick="restartGame()">Jogar Novamente</button>
+            </div>
+
+            <div class="vowels">
+                <h3>📚 As Vogais são:</h3>
+                <p><strong>A, E, I, O, U</strong></p>
+                <p>Todas as outras letras são <strong>consoantes</strong>.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const vowels = ['A', 'E', 'I', 'O', 'U'];
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        
+        let correct = 0;
+        let incorrect = 0;
+        let currentLetter = '';
+        let questionCount = 0;
+        const maxQuestions = 10;
+
+        function getRandomLetter() {
+            return alphabet[Math.floor(Math.random() * alphabet.length)];
+        }
+
+        function isVowel(letter) {
+            return vowels.includes(letter.toUpperCase());
+        }
+
+        function displayLetter() {
+            if (questionCount >= maxQuestions) {
+                endGame();
+                return;
+            }
+            currentLetter = getRandomLetter();
+            document.getElementById('letterDisplay').textContent = currentLetter;
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('feedback').className = 'feedback';
+        }
+
+        function answerYes() {
+            if (questionCount >= maxQuestions) return;
+            
+            const isCorrect = isVowel(currentLetter);
+            if (isCorrect) {
+                correct++;
+                showFeedback('Correto! ✅', true);
+            } else {
+                incorrect++;
+                showFeedback('Errado! ❌', false);
+            }
+            updateScore();
+            questionCount++;
+            setTimeout(displayLetter, 1500);
+        }
+
+        function answerNo() {
+            if (questionCount >= maxQuestions) return;
+            
+            const isCorrect = !isVowel(currentLetter);
+            if (isCorrect) {
+                correct++;
+                showFeedback('Correto! ✅', true);
+            } else {
+                incorrect++;
+                showFeedback('Errado! ❌', false);
+            }
+            updateScore();
+            questionCount++;
+            setTimeout(displayLetter, 1500);
+        }
+
+        function showFeedback(message, isCorrect) {
+            const feedbackEl = document.getElementById('feedback');
+            feedbackEl.textContent = message;
+            feedbackEl.className = isCorrect ? 'feedback correct' : 'feedback incorrect';
+        }
+
+        function updateScore() {
+            document.getElementById('correct').textContent = correct;
+            document.getElementById('incorrect').textContent = incorrect;
+        }
+
+        function endGame() {
+            document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('gameOver').classList.add('show');
+            
+            const percentage = Math.round((correct / maxQuestions) * 100);
+            document.getElementById('finalScore').textContent = 
+                `${correct}/${maxQuestions} acertos (${percentage}%)`;
+        }
+
+        function restartGame() {
+            correct = 0;
+            incorrect = 0;
+            questionCount = 0;
+            document.getElementById('gameContainer').style.display = 'block';
+            document.getElementById('gameOver').classList.remove('show');
+            updateScore();
+            displayLetter();
+        }
+
+        // Iniciar o jogo
+        displayLetter();
+    </script>
+</body>
+</html>
